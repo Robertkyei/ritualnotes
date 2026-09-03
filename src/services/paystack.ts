@@ -211,6 +211,55 @@ export const paystackService = {
     }
 
     try {
+      // Helper function to persist subscription and update state upon payment approval
+      const writeUserSubscription = (respReference?: string) => {
+        const actualRef = respReference || reference;
+        console.log('Writing user subscription for reference:', actualRef);
+
+        const record: SubscriptionRecord = {
+          userId: userProfile.id,
+          email: cleanEmail,
+          name: userProfile.name,
+          subscriptionStatus: 'active',
+          subscriptionTier: plan.id.includes('patron') ? 'patron' : 'pro',
+          reference: actualRef,
+          amount: plan.amountGHS,
+          currency: 'GHS',
+          paymentChannel: 'mobile_money',
+          paidAt: new Date().toISOString(),
+        };
+
+        // 1. Write subscription status directly to 'users' table in Supabase
+        supabaseService.writeUserSubscription(record).catch((err) => {
+          console.warn('Notice from Supabase users table write:', err);
+        });
+
+        // 2. Update local UserProfile storage
+        const updatedProfile: UserProfile = {
+          ...userProfile,
+          email: cleanEmail,
+          subscriptionStatus: 'active',
+          subscriptionTier: plan.id.includes('patron') ? 'patron' : 'pro',
+          subscriptionReference: actualRef,
+          subscriptionAmount: plan.amountGHS,
+          subscriptionCurrency: 'GHS',
+          subscriptionChannel: 'mobile_money',
+          subscriptionPaidAt: new Date().toISOString(),
+        };
+        storageService.saveUserProfile(updatedProfile);
+
+        // 3. Trigger success callback in application UI
+        if (onSuccess) {
+          onSuccess({
+            reference: actualRef,
+            status: 'success',
+            trans: actualRef,
+            transaction: actualRef,
+            message: 'Approved',
+          }, record);
+        }
+      };
+
       const handler = window.PaystackPop.setup({
         key: effectiveKey,
         email: cleanEmail,
@@ -242,46 +291,11 @@ export const paystackService = {
             },
           ],
         },
-        callback: async (response: PaystackSuccessResponse) => {
-          console.log('Paystack Mobile Money Transaction Response:', response);
-
-          const record: SubscriptionRecord = {
-            userId: userProfile.id,
-            email: cleanEmail,
-            name: userProfile.name,
-            subscriptionStatus: 'active',
-            subscriptionTier: plan.id.includes('patron') ? 'patron' : 'pro',
-            reference: response.reference || reference,
-            amount: plan.amountGHS,
-            currency: 'GHS',
-            paymentChannel: 'mobile_money',
-            paidAt: new Date().toISOString(),
-          };
-
-          // 1. Write subscription status directly to 'users' table in Supabase
-          const supabaseResult = await supabaseService.writeUserSubscription(record);
-          if (!supabaseResult.success) {
-            console.warn('Notice from Supabase users table write:', supabaseResult.error);
-          }
-
-          // 2. Update local UserProfile storage
-          const updatedProfile: UserProfile = {
-            ...userProfile,
-            email: cleanEmail,
-            subscriptionStatus: 'active',
-            subscriptionTier: plan.id.includes('patron') ? 'patron' : 'pro',
-            subscriptionReference: response.reference || reference,
-            subscriptionAmount: plan.amountGHS,
-            subscriptionCurrency: 'GHS',
-            subscriptionChannel: 'mobile_money',
-            subscriptionPaidAt: new Date().toISOString(),
-          };
-          storageService.saveUserProfile(updatedProfile);
-
-          // 3. Trigger success callback
-          await onSuccess(response, record);
+        callback: function(response: any) {
+          console.log("Payment successful", response.reference);
+          writeUserSubscription(response.reference);
         },
-        onClose: () => {
+        onClose: function() {
           console.log('Paystack payment popup closed by user');
           if (onClose) onClose();
         },
