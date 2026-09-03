@@ -8,6 +8,8 @@ import confetti from 'canvas-confetti';
 import { SermonLog, PrayerItem, UserProfile } from '../types';
 import { storageService } from '../services/storage';
 import { VerseOfTheDayCard } from './VerseOfTheDayCard';
+import { Footer } from './Footer';
+import { LegalModal, LegalDocType } from './LegalModal';
 
 interface HomeDashboardProps {
   userProfile: UserProfile;
@@ -34,6 +36,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [legalDocType, setLegalDocType] = useState<LegalDocType>('privacy');
   const timerRef = useRef<number | null>(null);
 
   // Active recording timer
@@ -546,6 +550,21 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
 
       </div>
+
+      {/* Minimalist Sanctuary Legal Footer */}
+      <Footer
+        onOpenLegal={(type) => {
+          setLegalDocType(type);
+          setIsLegalModalOpen(true);
+        }}
+      />
+
+      {/* Full Legal Modal Overlay */}
+      <LegalModal
+        isOpen={isLegalModalOpen}
+        initialDoc={legalDocType}
+        onClose={() => setIsLegalModalOpen(false)}
+      />
 
     </div>
   );

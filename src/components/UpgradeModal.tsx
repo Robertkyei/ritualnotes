@@ -7,6 +7,7 @@ import confetti from 'canvas-confetti';
 import { UserProfile, SubscriptionRecord, PaystackSuccessResponse } from '../types';
 import { paystackService, GHS_PLANS, PlanOption } from '../services/paystack';
 import { supabaseService } from '../services/supabase';
+import { LegalModal, LegalDocType } from './LegalModal';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successRecord, setSuccessRecord] = useState<SubscriptionRecord | null>(null);
   const [supabaseSyncStatus, setSupabaseSyncStatus] = useState<string | null>(null);
+  const [legalDoc, setLegalDoc] = useState<LegalDocType | null>(null);
 
   if (!isOpen) return null;
 
@@ -357,7 +359,42 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
             </div>
           </div>
         )}
+
+        {/* Minimalist Sanctuary Footer at absolute bottom of Upgrade Modal */}
+        <div className="border-t border-slate-800/80 pt-4 mt-5">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+            <p className="text-[11px] font-medium text-[#c5a86b] tracking-wide">
+              © 2026 ROBLIN25 SERVICES. All rights reserved.
+            </p>
+            <div className="flex items-center gap-3 text-[11px] font-medium text-[#c5a86b]">
+              <button
+                id="upgrade-modal-link-privacy"
+                type="button"
+                onClick={() => setLegalDoc('privacy')}
+                className="hover:text-amber-300 hover:underline underline-offset-4 transition-colors cursor-pointer"
+              >
+                Privacy Policy
+              </button>
+              <span className="text-[#c5a86b]/40">•</span>
+              <button
+                id="upgrade-modal-link-terms"
+                type="button"
+                onClick={() => setLegalDoc('terms')}
+                className="hover:text-amber-300 hover:underline underline-offset-4 transition-colors cursor-pointer"
+              >
+                Terms of Service
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Legal Modal Overlay */}
+      <LegalModal
+        isOpen={legalDoc !== null}
+        initialDoc={legalDoc || 'privacy'}
+        onClose={() => setLegalDoc(null)}
+      />
     </div>
   );
 };
