@@ -1,0 +1,10 @@
+{
+  "name": "RitualNotes",
+  "description": "A serene mobile web application designed for churchgoers to document and track sermons, organize AI structured notes, and cultivate daily prayer habits.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
