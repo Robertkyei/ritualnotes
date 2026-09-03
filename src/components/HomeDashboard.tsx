@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Mic, Sparkles, Flame, BookOpen, HeartHandshake, Plus, 
-  Calendar, User, ChevronRight, Church, Heart, CheckCircle2, Clock, Square, Radio
+  Calendar, User, ChevronRight, Church, Heart, CheckCircle2, Clock, Square, Radio,
+  Crown, Smartphone
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { SermonLog, PrayerItem, UserProfile } from '../types';
@@ -17,6 +18,7 @@ interface HomeDashboardProps {
   onNavigateToPrayers: () => void;
   onOpenAddPrayerWithVerse?: (text: string, reference: string) => void;
   onSermonCreated?: (sermon: SermonLog) => void;
+  onOpenUpgrade?: () => void;
 }
 
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
@@ -28,6 +30,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   onNavigateToPrayers,
   onOpenAddPrayerWithVerse,
   onSermonCreated,
+  onOpenUpgrade,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
@@ -386,6 +389,39 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
 
       </div>
+
+      {/* SANCTUARY PRO UPGRADE CALLOUT (PAYSTACK GHS MOBILE MONEY) */}
+      {userProfile.subscriptionStatus !== 'active' && onOpenUpgrade && (
+        <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-[#121c3d] via-[#0e1633] to-[#080d22] p-4.5 sm:p-5 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 font-bold shadow-md shadow-amber-500/20">
+              <Crown className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-amber-200 font-heading">
+                  Upgrade to Sanctuary Pro
+                </h3>
+                <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/30">
+                  GHS 49/mo
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Pay via <strong>Ghana Mobile Money (MTN MoMo, Telecel, AirtelTigo)</strong> using Paystack. Unlimited sermon AI & live cloud sync.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onOpenUpgrade}
+            className="self-start sm:self-center shrink-0 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 px-4 py-2.5 text-xs font-black text-slate-950 shadow-md shadow-amber-500/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Upgrade Now</span>
+          </button>
+        </div>
+      )}
 
       {/* VERSE OF THE DAY SECTION */}
       <div>

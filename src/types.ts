@@ -69,6 +69,7 @@ export interface PrayerItem {
 export interface UserProfile {
   id: string;
   name: string;
+  email?: string;
   churchName: string;
   preferredTranslation: string;
   streakCount: number;
@@ -77,6 +78,48 @@ export interface UserProfile {
   prayedDates: string[]; // List of YYYY-MM-DD
   totalPrayersAnswered: number;
   totalSermonsLogged: number;
+  subscriptionStatus?: 'free' | 'active' | 'inactive' | 'trial';
+  subscriptionTier?: 'free' | 'pro' | 'patron';
+  subscriptionReference?: string;
+  subscriptionAmount?: number;
+  subscriptionCurrency?: string;
+  subscriptionChannel?: string;
+  subscriptionPaidAt?: string;
+}
+
+export interface PaystackSuccessResponse {
+  reference: string;
+  trans?: string;
+  status?: string;
+  message?: string;
+  transaction?: string;
+  trxref?: string;
+  redirecturl?: string;
+}
+
+export interface PaystackConfig {
+  key: string;
+  email: string;
+  amount: number; // in pesewas
+  currency: string; // 'GHS'
+  ref: string;
+  channels?: string[]; // e.g. ['mobile_money', 'card']
+  metadata?: Record<string, any>;
+  callback: (response: PaystackSuccessResponse) => void;
+  onClose: () => void;
+}
+
+export interface SubscriptionRecord {
+  userId: string;
+  email?: string;
+  name?: string;
+  subscriptionStatus: 'active' | 'inactive' | 'trial' | 'free';
+  subscriptionTier: 'pro' | 'patron' | 'free';
+  reference: string;
+  amount: number;
+  currency: string;
+  paymentChannel?: string;
+  paidAt: string;
 }
 
 export interface VerseOfTheDay {

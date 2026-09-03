@@ -9,6 +9,7 @@ import { PrayerTrackerView } from './components/PrayerTrackerView';
 import { ProfileView } from './components/ProfileView';
 import { RecordingModal } from './components/RecordingModal';
 import { AddPrayerModal } from './components/AddPrayerModal';
+import { UpgradeModal } from './components/UpgradeModal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('home');
@@ -20,6 +21,7 @@ export default function App() {
   const [selectedSermonId, setSelectedSermonId] = useState<string | undefined>(undefined);
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false);
   const [isAddPrayerModalOpen, setIsAddPrayerModalOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [prayerInitialText, setPrayerInitialText] = useState('');
   const [prayerInitialScripture, setPrayerInitialScripture] = useState('');
 
@@ -129,6 +131,7 @@ export default function App() {
         activeTab={activeTab}
         onChangeTab={handleTabChange}
         onOpenRecording={() => setIsRecordingModalOpen(true)}
+        onOpenUpgrade={() => setIsUpgradeModalOpen(true)}
         userProfile={userProfile}
         sermonCount={sermons.length}
         prayerCount={prayers.length}
@@ -142,6 +145,7 @@ export default function App() {
             sermons={sermons}
             prayers={prayers}
             onOpenRecording={() => setIsRecordingModalOpen(true)}
+            onOpenUpgrade={() => setIsUpgradeModalOpen(true)}
             onNavigateToNotebook={(sermonId) => {
               if (sermonId) setSelectedSermonId(sermonId);
               handleTabChange('notebook');
@@ -182,9 +186,22 @@ export default function App() {
             prayers={prayers}
             onUpdateUserProfile={setUserProfile}
             onResetData={handleResetData}
+            onOpenUpgrade={() => setIsUpgradeModalOpen(true)}
           />
         )}
       </main>
+
+      {/* Paystack Inline Upgrade Modal */}
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        userProfile={userProfile}
+        onSubscriptionSuccess={(record, updatedProfile) => {
+          storageService.saveUserProfile(updatedProfile);
+          setUserProfile(updatedProfile);
+          refreshLiveCloudData(true);
+        }}
+      />
 
       {/* Recording Suite Modal */}
       <RecordingModal

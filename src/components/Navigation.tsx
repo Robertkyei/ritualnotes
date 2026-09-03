@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, BookOpen, HeartHandshake, Mic, Sparkles, Settings, Church, Flame } from 'lucide-react';
+import { Home, BookOpen, HeartHandshake, Mic, Sparkles, Settings, Church, Flame, Crown } from 'lucide-react';
 import { UserProfile } from '../types';
 
 export type NavTab = 'home' | 'notebook' | 'prayers' | 'profile';
@@ -8,6 +8,7 @@ interface NavigationProps {
   activeTab: NavTab;
   onChangeTab: (tab: NavTab) => void;
   onOpenRecording: () => void;
+  onOpenUpgrade?: () => void;
   userProfile: UserProfile;
   sermonCount: number;
   prayerCount: number;
@@ -17,10 +18,12 @@ export const Navigation: React.FC<NavigationProps> = ({
   activeTab,
   onChangeTab,
   onOpenRecording,
+  onOpenUpgrade,
   userProfile,
   sermonCount,
   prayerCount,
 }) => {
+  const isPro = userProfile.subscriptionStatus === 'active';
   return (
     <>
       {/* DESKTOP TOP HEADER / NAVIGATION */}
@@ -88,11 +91,35 @@ export const Navigation: React.FC<NavigationProps> = ({
             </button>
           </nav>
 
-          {/* Right Action: Record CTA & Profile */}
-          <div className="flex items-center gap-3">
+          {/* Right Action: Upgrade CTA, Record CTA & Profile */}
+          <div className="flex items-center gap-2.5">
+            {onOpenUpgrade && (
+              isPro ? (
+                <button
+                  type="button"
+                  onClick={onOpenUpgrade}
+                  className="hidden lg:flex items-center gap-1.5 rounded-xl bg-amber-500/10 border border-amber-500/40 px-3 py-1.5 text-xs font-bold text-amber-300 hover:bg-amber-500/20 transition-all cursor-pointer"
+                  title="Sanctuary Pro Active • Paystack Mobile Money"
+                >
+                  <Crown className="h-3.5 w-3.5 text-amber-400" />
+                  <span>Pro Active</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onOpenUpgrade}
+                  className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-amber-500/20 border border-amber-500/40 px-3 py-1.5 text-xs font-bold text-amber-300 hover:border-amber-400 hover:bg-amber-500/25 transition-all shadow-sm cursor-pointer"
+                  title="Upgrade with Ghana Mobile Money (GHS) via Paystack"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                  <span>Upgrade Now</span>
+                </button>
+              )
+            )}
+
             <button
               onClick={onOpenRecording}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 px-4 py-2 text-xs font-bold text-slate-950 shadow-md shadow-amber-500/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 px-3.5 py-2 text-xs font-bold text-slate-950 shadow-md shadow-amber-500/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
             >
               <Mic className="h-3.5 w-3.5" />
               <span>Record Sermon</span>

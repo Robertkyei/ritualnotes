@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
-import { SermonLog, PrayerItem, UserProfile } from '../types';
+import { SermonLog, PrayerItem, UserProfile, SubscriptionRecord } from '../types';
 
 // Load Supabase configuration from client-side environment variables
 const getEnvVar = (key: string): string => {
@@ -456,6 +456,100 @@ export const supabaseService = {
     } catch (e) {
       console.warn('Supabase deletePrayer failed:', e);
       return false;
+    }
+  },
+
+  // USERS TABLE OPERATIONS (Subscription Status & Mobile Money Payments)
+  /**
+   * Directly writes the subscription status to the 'users' table in Supabase
+   * upon successful Paystack mobile money transaction.
+   */
+  async writeUserSubscription(sub: SubscriptionRecord): Promise<{ success: boolean; error?: string; data?: any }> {
+    if (!isSupabaseConfigured()) {
+      return { success: false, error: 'Supabase URL and Anon Key are not configured.' };
+    }
+
+    try {
+      const payload: Record<string, any> = {
+        id: sub.userId,
+        email: sub.email || null,
+        name: sub.name || null,
+        subscription_status: sub.subscriptionStatus,
+        subscription_tier: sub.subscriptionTier,
+        subscription_reference: sub.reference,
+        subscription_amount: sub.amount,
+        subscription_currency: sub.currency || 'GHS',
+        payment_channel: sub.paymentChannel || 'mobile_money',
+        paid_at: sub.paidAt || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      console.log('Writing subscription status directly to Supabase "users" table...', payload);
+
+      // Execute primary upsert statement directly to 'users' table
+      const { data, error } = await supabase
+        .from('users')
+        .upsert(payload)
+        .select();
+
+      if (error) {
+        console.warn('Direct write to Supabase "users" table encountered notice:', error.message);
+        
+        // Also ensure fallback sync to profiles table if users table schema is still provisioning
+        try {
+          await supabase.from('profiles').upsert({
+            id: sub.userId,
+            subscription_status: sub.subscriptionStatus,
+            subscription_tier: sub.subscriptionTier,
+            subscription_reference: sub.reference,
+            updated_at: new Date().toISOString(),
+          });
+        } catch {}
+
+        return { success: false, error: error.message };
+      }
+
+      console.log('Successfully wrote subscription status to Supabase "users" table:', data);
+      return { success: true, data };
+    } catch (err: any) {
+      console.error('Exception writing subscription to Supabase "users" table:', err);
+      return { success: false, error: err?.message || 'Failed to write subscription to users table' };
+    }
+  },
+
+  /**
+   * Fetches the user subscription status directly from the 'users' table in Supabase
+   */
+  async fetchUserSubscription(userId: string): Promise<{
+    status: 'active' | 'inactive' | 'trial' | 'free';
+    tier: 'pro' | 'patron' | 'free';
+    reference?: string;
+    amount?: number;
+    currency?: string;
+    paidAt?: string;
+  } | null> {
+    if (!isSupabaseConfigured()) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error || !data) return null;
+
+      return {
+        status: data.subscription_status || 'free',
+        tier: data.subscription_tier || 'free',
+        reference: data.subscription_reference || undefined,
+        amount: data.subscription_amount ? Number(data.subscription_amount) : undefined,
+        currency: data.subscription_currency || 'GHS',
+        paidAt: data.paid_at || undefined,
+      };
+    } catch (err) {
+      console.warn('Error fetching subscription from "users" table:', err);
+      return null;
     }
   },
 };

@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { User, Church, BookOpen, Flame, Trophy, Shield, RefreshCw, Check, Sparkles, Heart, Database, Cloud, LogIn, LogOut, CheckCircle2, AlertCircle, Code } from 'lucide-react';
+import { 
+  User, Church, BookOpen, Flame, Trophy, Shield, RefreshCw, Check, 
+  Sparkles, Heart, Database, Cloud, LogIn, LogOut, CheckCircle2, 
+  AlertCircle, Code, Crown, Smartphone, CreditCard, ExternalLink
+} from 'lucide-react';
 import { UserProfile, SermonLog, PrayerItem } from '../types';
 import { storageService } from '../services/storage';
 import { supabaseService, isSupabaseConfigured } from '../services/supabase';
+import { paystackService } from '../services/paystack';
 
 interface ProfileViewProps {
   userProfile: UserProfile;
@@ -10,6 +15,7 @@ interface ProfileViewProps {
   prayers: PrayerItem[];
   onUpdateUserProfile: (user: UserProfile) => void;
   onResetData: (data: { sermons: SermonLog[]; prayers: PrayerItem[]; user: UserProfile }) => void;
+  onOpenUpgrade?: () => void;
 }
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
@@ -18,6 +24,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   prayers,
   onUpdateUserProfile,
   onResetData,
+  onOpenUpgrade,
 }) => {
   const [name, setName] = useState(userProfile.name);
   const [churchName, setChurchName] = useState(userProfile.churchName);
@@ -163,6 +170,98 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         </div>
       </div>
 
+      {/* Sanctuary Patron & Pro Membership Card (Paystack Inline GHS & Mobile Money) */}
+      <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-[#121d3f] via-[#091128] to-[#050817] p-6 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-amber-500/20 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 shadow-md shadow-amber-500/20">
+              <Crown className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-amber-200 font-heading">
+                  Sanctuary Patron & Pro Membership
+                </h3>
+                {userProfile.subscriptionStatus === 'active' ? (
+                  <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-300 border border-emerald-500/40 uppercase tracking-wider flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                    Active Pro (GHS)
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-slate-800 px-2.5 py-0.5 text-[10px] font-bold text-slate-400 border border-slate-700">
+                    Free Devotion Tier
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Powered by <strong>Paystack Inline SDK</strong> in <strong>Ghanaian Cedis (GHS)</strong>. Writes directly to Supabase <code className="text-amber-300">users</code> table.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onOpenUpgrade}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 px-4 py-2.5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>{userProfile.subscriptionStatus === 'active' ? 'Manage Pro Plan' : 'Upgrade Now'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Membership Details & Channel Grid */}
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="rounded-xl bg-slate-950/60 border border-slate-800 p-3.5 space-y-1">
+            <div className="flex items-center gap-1.5 text-amber-400 font-semibold text-[11px]">
+              <Smartphone className="h-3.5 w-3.5" />
+              <span>Ghana Mobile Money</span>
+            </div>
+            <p className="text-[11px] text-slate-300">
+              Instant prompt on MTN MoMo, Telecel Cash, or AirtelTigo.
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-slate-950/60 border border-slate-800 p-3.5 space-y-1">
+            <div className="flex items-center gap-1.5 text-emerald-400 font-semibold text-[11px]">
+              <Database className="h-3.5 w-3.5" />
+              <span>Supabase 'users' Sync</span>
+            </div>
+            <p className="text-[11px] text-slate-300">
+              Transaction reference & active status written straight to cloud table.
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-slate-950/60 border border-slate-800 p-3.5 space-y-1">
+            <div className="flex items-center gap-1.5 text-blue-400 font-semibold text-[11px]">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Sanctuary Features</span>
+            </div>
+            <p className="text-[11px] text-slate-300">
+              Unlimited AI sermon audio processing, deep notes, & prayer streaks.
+            </p>
+          </div>
+        </div>
+
+        {/* If Active, Show Details */}
+        {userProfile.subscriptionStatus === 'active' && (
+          <div className="mt-3 rounded-xl bg-emerald-950/50 border border-emerald-500/30 p-3 text-xs text-emerald-300 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+              <span>
+                Active <strong>{userProfile.subscriptionTier?.toUpperCase() || 'PRO'}</strong> Member • Reference: <code className="font-mono text-[11px] text-emerald-200">{userProfile.subscriptionReference || 'RN-PAYSTACK'}</code>
+              </span>
+            </div>
+            {userProfile.subscriptionPaidAt && (
+              <span className="text-[11px] text-emerald-400/80">
+                Verified: {new Date(userProfile.subscriptionPaidAt).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Supabase Cloud Backend & Database Integration */}
       <div className="rounded-2xl border border-emerald-500/30 bg-[#071324] p-6 shadow-xl space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-500/20 pb-3">
@@ -267,6 +366,22 @@ CREATE TABLE IF NOT EXISTS prayers (
   last_prayed_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 4. Users Table (Subscribers & Paystack Mobile Money in GHS)
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  email TEXT,
+  name TEXT,
+  subscription_status TEXT DEFAULT 'active',
+  subscription_tier TEXT DEFAULT 'pro',
+  subscription_reference TEXT,
+  subscription_amount NUMERIC,
+  subscription_currency TEXT DEFAULT 'GHS',
+  payment_channel TEXT DEFAULT 'mobile_money',
+  paid_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );`}
             </pre>
           </div>
